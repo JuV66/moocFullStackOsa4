@@ -1,32 +1,27 @@
-//const http = require('http')
+const http = require('http')
 const express = require('express')
 const app = express()
 const cors = require('cors')
 const bodyParser = require('body-parser')
+const config = require('./utils/config')
 const mongoose = require('mongoose')
 
 const middleware = require('./utils/middleware')
-const personsRouter = require('./controllers/blog')
-
-
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config()
-}
-
-const url = process.env.MONGODB_URI
+const blogsRouter = require('./controllers/blog')
 
 /*if (url === undefined) {
   console.log ("DB URL: ", url)
   return -1
 }
 */
-mongoose.connect(url, { useNewUrlParser: true },err => {
-  if (err) {
-    console.log ('DB error URL: ', url)
-    throw err
-  }
-  console.log('Successfully connected to database.')
-})
+mongoose
+  .connect(config.mongoUrl, { useNewUrlParser: true },err => {
+    if (err) {
+      console.log ('DB error URL: ', config.mongoUrl)
+      throw err
+    }
+    console.log('Successfully connected to database.')
+  })
 
 app.use(cors())
 app.use(bodyParser.json({ type: 'application/json' }))
@@ -36,12 +31,20 @@ app.use(express.static('build')) // tarvitaan siihen että fortti koodi saadaan 
 
 app.use(middleware.logger)
 
-app.use('/api/blogs', personsRouter)
+app.use('/api/blogs', blogsRouter)
 
 app.use(middleware.error)
 
+const server = http.createServer(app)
 
-const PORT = process.env.PORT || 3003
-app.listen(PORT, () => {
-  //console.log(`Server running on port ${PORT}`)
+server.listen(config.port, () => {
+  console.log(`Server running on port ${config.port}`)
 })
+
+server.on('close', () => {
+  mongoose.connection.close()
+})
+
+module.exports = {
+  app, server
+}

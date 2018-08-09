@@ -1,10 +1,11 @@
 module.exports = {
     "env": {
-        "node": true
+        "node": true,
+        "jest": true
     },
     "extends": "eslint:recommended",
     "parserOptions": {
-        "ecmaVersion": 6
+        "ecmaVersion": 2018
     },
     "rules": {
         "indent": [
