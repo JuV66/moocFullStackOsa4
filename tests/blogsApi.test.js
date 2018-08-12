@@ -1,92 +1,200 @@
 const supertest = require('supertest')
 const { app, server } = require('../index')
 const api = supertest(app)
-
 const Blog = require('../models/blog')
+const { 
+  initialBlogs,
+  initialOneBlogs,
+  addedBlog,
+  emptyLikesBlog,
+  Bad400Blog,
+  format, 
+  nonExistingId, 
+  blogsInDB } = require('./test_helper')
 
-const initialBlogs = [
-  {
-    _id: '5a422a851b54a676234d17f7',
-    title: 'React patterns',
-    author: 'Michael Chan',
-    url: 'https://reactpatterns.com/',
-    likes: 7,
-    __v: 0
-  },
-  {
-    _id: '5a422aa71b54a676234d17f8',
-    title: 'Go To Statement Considered Harmful',
-    author: 'Edsger W. Dijkstra',
-    url: 'http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html',
-    likes: 5,
-    __v: 0
-  },
-  {
-    _id: '5a422b3a1b54a676234d17f9',
-    title: 'Canonical string reduction',
-    author: 'Edsger W. Dijkstra',
-    url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html',
-    likes: 12,
-    __v: 0
-  },
-  {
-    _id: '5a422b891b54a676234d17fa',
-    title: 'First class tests',
-    author: 'Robert C. Martin',
-    url: 'http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll',
-    likes: 10,
-    __v: 0
-  },
-  {
-    _id: '5a422ba71b54a676234d17fb',
-    title: 'TDD harms architecture',
-    author: 'Robert C. Martin',
-    url: 'http://blog.cleancoder.com/uncle-bob/2017/03/03/TDD-Harms-Architecture.html',
-    likes: 0,
-    __v: 0
-  },
-  {
-    _id: '5a422bc61b54a676234d17fc',
-    title: 'Type wars',
-    author: 'Robert C. Martin',
-    url: 'http://blog.cleancoder.com/uncle-bob/2016/05/01/TypeWars.html',
-    likes: 2,
-    __v: 0
-  }
-]
+describe('test', async () => {
+  beforeAll(async () => {
+    await Blog.remove({})
 
-beforeAll(async () => {
-  await Blog.remove({})
+    let blogObject = initialBlogs.map(blog => new Blog(blog))
+    const promiseArray = blogObject.map(blog => blog.save())
+    await Promise.all(promiseArray)
+  })
 
-  let blogObject = initialBlogs.map(blog => new Blog(blog))
-  const promiseArray = blogObject.map(blog => blog.save())
-  await Promise.all(promiseArray)
+  test('blogs are returned as json', async () => {
+
+    const blogsInDataBase = await blogsInDB()
+
+    const response = await api
+      .get('/api/blogs')
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    expect(response.body.length).toBe(blogsInDataBase.length)
+
+    const returnedContents = response.body.map(n => n.title)
+    blogsInDataBase.forEach(blog => {
+      expect(returnedContents).toContain(blog.title)
+    })
+  })
 
 
+  test('the first blogs', async () => {
+    const response = await api
+      .get('/api/blogs')
+    //console.log('body: ' + response.body[0].title )
+    const title = response.body.map(b => b.title)
+    console.log(title )
+    expect(title).toContain('React patterns' )
+  })
+
+  test('add new blog', async () => {
+    const blogsAtStart = await blogsInDB()
+    await api
+      .post('/api/blogs')
+      .send(addedBlog)
+      .expect(201)
+
+    const blogsAfterOperation = await blogsInDB()
+
+    expect(blogsAfterOperation.length).toBe(blogsAtStart.length +1)
+
+    const titles = blogsAfterOperation.map(r => r.title)
+    expect (titles).toContain('lisätty blog')
+
+  })
+
+  test('add new blog with empty likes', async () => {
+    //console.log('emptyLikesBlog.title: ' + emptyLikesBlog.title)
+    const response = await api
+      .post('/api/blogs')
+      .send(emptyLikesBlog)
+      .expect(201)
+    const body = response.body
+    //console.log('savedBlog: ' + new Blog(body) )
+    //console.log('\n')
+    //console.log('\n')
+    //console.log('\n')
+
+    expect(body.likes).toBe(0)
+  })
+
+  test('400 bad request', async () => {
+    //console.log('emptyLikesBlog.title: ' + emptyLikesBlog.title)
+    const response = await api
+      .post('/api/blogs')
+      .send(Bad400Blog)
+      .expect(400)
+    //const body = response.body
+    //console.log('savedBlog: ' + new Blog(body) )
+    //console.log('\n')
+    //console.log('\n')
+    //console.log('\n')
+  })
+
+  test('return blogs with id' , async () => {
+    const blogsInDataBase = await blogsInDB()
+    const aBlog = blogsInDataBase[0]
+
+    console.log('aBlog: ' + aBlog._id + '\n')
+    console.log('\n')
+    console.log('\n')
+    console.log('\n')
+
+    const response = await api
+      .get('/api/blogs/' + aBlog._id)
+      .expect(200)
+      .expect('Content-Type', /application\/json/)
+
+    console.log('body: ' + response.body.title + '\n')
+    console.log('\n')
+    console.log('\n')
+    expect(response.body.title).toBe(aBlog.title)
+
+  })
 })
 
-test('blogs are returned as json', async () => {
-  await api
-    .get('/api/blogs')
-    .expect(200)
-    //.expect('Content-Type', /application\/json/)
+describe('remove test', async () => {
+  let addedBlog
+
+  beforeAll(async () => {
+    addedBlog = new Blog({
+      title: 'addedBlogs',
+      author: 'Mä',
+      url: 'https://fmi.fi/',
+      likes: 66,
+    })
+    await addedBlog.save()
+  })
+
+  test.only('remove blogs with id' , async () => {
+
+    const blogsAtStart = await blogsInDB()
+
+    blogsAtStart.map(o => console.log(o))
+    //console.log ('start: ' + blogsAtStart )
+    console.log('\n')
+
+    await api
+      .delete('/api/blogs/' + addedBlog._id)
+      .expect(200)
+
+    const blogsAfterOp = await blogsInDB()
+
+    blogsAfterOp.map(o => console.log(o))
+    console.log('\n')
+
+    const titles = blogsAfterOp.map(r => r.title)
+
+    expect(titles).not.toContain(addedBlog.title)
+    expect(blogsAfterOp.length).toBe(blogsAtStart.length-1)
+
+
+  })
 })
 
-test('there are all blogs', async () => {
-  const response = await api
-    .get('/api/blogs')
+describe('update test', async () => {
+  let addedBlog
 
-  expect(response.body.length).toBe(initialBlogs.length)
+  beforeAll(async () => {
+    addedBlog = new Blog({
+      title: 'addedBlogs',
+      author: 'Mä',
+      url: 'https://fmi.fi/',
+      likes: 66,
+    })
+    await addedBlog.save()
+  })
+
+  test.only('update blogs title with id' , async () => {
+
+    const blogsAtStart = await blogsInDB()
+
+    addedBlog.title = 'updatedBlog'
+
+    blogsAtStart.map(o => console.log(o))
+    //console.log ('start: ' + blogsAtStart )
+    console.log('\n')
+
+    await api
+      .put('/api/blogs/' + addedBlog._id)
+      .send(addedBlog)
+      .expect(200)
+
+    const blogsAfterOp = await blogsInDB()
+
+    blogsAfterOp.map(o => console.log(o))
+    console.log('\n')
+
+    const titles = blogsAfterOp.map(r => r.title)
+
+    expect(titles).toContain(addedBlog.title)
+    expect(blogsAfterOp.length).toBe(blogsAtStart.length)
+
+
+  })
 })
 
-test('the first blogs', async () => {
-  const response = await api
-    .get('/api/blogs')
-  //console.log('body: ' + response.body[0].title )
-  const title = response.body.map(b => b.title)
-  console.log(title )
-  expect(title).toContain('React patterns' )
-})
 
 afterAll(() => {
   server.close()
