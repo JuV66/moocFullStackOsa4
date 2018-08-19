@@ -1,4 +1,5 @@
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 const initialOneBlogs = [
 {
@@ -63,11 +64,12 @@ const initialBlogs = [
 
 const addedBlog =
   {
-    title: 'lisätty blog',
-    author: 'Mä',
+    title: 'lisätty uusi blog',
+    author: 'Masa',
     url: 'http://blog.cleancoder.com/uncle-bob/2016/05/01/TypeWars.html',
     likes: 45,
-    __v: 0
+    __v: 0,
+    userId : '5b745731dd27571730d314ee'
   }
 
 const emptyLikesBlog =
@@ -85,17 +87,6 @@ const Bad400Blog =
     __v: 0
   }
 
-const format = (blog) => {
-  return {
-    _id : blog._id,
-    title: blog.title,
-    author: blog.author,
-    url: blog.uri,
-    likes: blog.likes,
-    __v: blog.__v
-  }
-}
-
 const nonExistingId = async () => {
   const blog = new Blog()
   await blog.save()
@@ -106,7 +97,14 @@ const nonExistingId = async () => {
 
 const blogsInDB = async () => {
   const blogs = await Blog.find({})
-  return blogs.map(format)
+  return blogs
+}
+
+const usersInDb = async () => {
+
+  const users = await User.find({})
+
+  return users
 }
 
 module.exports = {
@@ -115,7 +113,7 @@ module.exports = {
   addedBlog,
   emptyLikesBlog,
   Bad400Blog,
-  format,
   nonExistingId,
-  blogsInDB
+  blogsInDB,
+  usersInDb,
 }

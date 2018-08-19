@@ -74,7 +74,7 @@ const blogs = [
   }
 ]
 
-describe('total likes', () => {
+describe.skip('total likes', () => {
 
   test('when list has only one blog equals the likes of that', () => {
     const result = listHelper.totalLikes(listWithOneBlog)
@@ -92,7 +92,7 @@ describe('total likes', () => {
   })
 })
 
-describe('favoriteBlog', () => {
+describe.skip('favoriteBlog', () => {
 
   test.only('favoriteBlog, one Blog', () => {
     const result = listHelper.favoriteBlog(blogs)

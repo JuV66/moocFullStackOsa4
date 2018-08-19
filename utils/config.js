@@ -10,6 +10,9 @@ if (process.env.NODE_ENV === 'test') {
   mongoUrl = process.env.TEST_MONGODB_URI
 }
 
+//console.log('port: ' + port)
+//console.log('url: ' + mongoUrl)
+
 module.exports = {
   mongoUrl,
   port

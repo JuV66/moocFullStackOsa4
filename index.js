@@ -3,11 +3,16 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 const bodyParser = require('body-parser')
-const config = require('./utils/config')
 const mongoose = require('mongoose')
 
+
 const middleware = require('./utils/middleware')
+
+
 const blogsRouter = require('./controllers/blog')
+const usersRouter = require('./controllers/users')
+const loginRouter = require('./controllers/login')
+const config = require('./utils/config')
 
 /*if (url === undefined) {
   console.log ("DB URL: ", url)
@@ -31,15 +36,28 @@ app.use(express.static('build')) // tarvitaan siihen että fortti koodi saadaan 
 
 app.use(middleware.logger)
 
+app.use('/api/login', loginRouter)
 app.use('/api/blogs', blogsRouter)
+app.use('/api/users', usersRouter)
 
 app.use(middleware.error)
 
 const server = http.createServer(app)
 
-server.listen(config.port, () => {
-  console.log(`Server running on port ${config.port}`)
-})
+// console.log('config.port: ' +config.port)
+
+try {
+  console.log('process.env.NODE_ENV : ' +process.env.NODE_ENV )
+  if (process.env.NODE_ENV !== 'test') {
+    server.listen(config.port, () => {
+      console.log(`Server running on port ${config.port}`)
+
+    })
+  }
+} catch (exception) {
+  console.log(exception)
+  console.log(`Server error, try used port ${config.port}`)
+}
 
 server.on('close', () => {
   mongoose.connection.close()

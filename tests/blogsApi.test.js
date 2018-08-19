@@ -1,8 +1,8 @@
 const supertest = require('supertest')
-const { app, server } = require('../index')
+const { app } = require('../index')
 const api = supertest(app)
 const Blog = require('../models/blog')
-const { 
+const {
   initialBlogs,
   initialOneBlogs,
   addedBlog,
@@ -10,13 +10,15 @@ const {
   Bad400Blog,
   format, 
   nonExistingId, 
-  blogsInDB } = require('./test_helper')
+  blogsInDB,
+  usersInDb
+} = require('./test_helper')
 
 describe('test', async () => {
   beforeAll(async () => {
     await Blog.remove({})
 
-    let blogObject = initialBlogs.map(blog => new Blog(blog))
+    let blogObject = initialOneBlogs.map(blog => new Blog(blog))
     const promiseArray = blogObject.map(blog => blog.save())
     await Promise.all(promiseArray)
   })
@@ -36,10 +38,12 @@ describe('test', async () => {
     blogsInDataBase.forEach(blog => {
       expect(returnedContents).toContain(blog.title)
     })
+    //response.body.map(o => console.log(o))
   })
 
 
   test('the first blogs', async () => {
+
     const response = await api
       .get('/api/blogs')
     //console.log('body: ' + response.body[0].title )
@@ -48,7 +52,7 @@ describe('test', async () => {
     expect(title).toContain('React patterns' )
   })
 
-  test('add new blog', async () => {
+  test.only('add new blog', async () => {
     const blogsAtStart = await blogsInDB()
     await api
       .post('/api/blogs')
@@ -60,7 +64,9 @@ describe('test', async () => {
     expect(blogsAfterOperation.length).toBe(blogsAtStart.length +1)
 
     const titles = blogsAfterOperation.map(r => r.title)
-    expect (titles).toContain('lisätty blog')
+    expect (titles).toContain('lisätty uusi blog')
+
+    blogsAfterOperation.map(r => console.log(r))
 
   })
 
@@ -114,7 +120,7 @@ describe('test', async () => {
   })
 })
 
-describe('remove test', async () => {
+describe.skip('remove test', async () => {
   let addedBlog
 
   beforeAll(async () => {
@@ -127,7 +133,7 @@ describe('remove test', async () => {
     await addedBlog.save()
   })
 
-  test.only('remove blogs with id' , async () => {
+  test('remove blogs with id' , async () => {
 
     const blogsAtStart = await blogsInDB()
 
@@ -153,7 +159,7 @@ describe('remove test', async () => {
   })
 })
 
-describe('update test', async () => {
+describe.skip('update test', async () => {
   let addedBlog
 
   beforeAll(async () => {
@@ -166,7 +172,7 @@ describe('update test', async () => {
     await addedBlog.save()
   })
 
-  test.only('update blogs title with id' , async () => {
+  test('update blogs title with id' , async () => {
 
     const blogsAtStart = await blogsInDB()
 
@@ -195,7 +201,8 @@ describe('update test', async () => {
   })
 })
 
-
+/*
 afterAll(() => {
   server.close()
 })
+*/
