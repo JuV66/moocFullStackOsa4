@@ -9,6 +9,8 @@ const mongoose = require('mongoose')
 const middleware = require('./utils/middleware')
 
 
+
+
 const blogsRouter = require('./controllers/blog')
 const usersRouter = require('./controllers/users')
 const loginRouter = require('./controllers/login')
@@ -35,9 +37,14 @@ app.use(bodyParser.json())
 app.use(express.static('build')) // tarvitaan siihen että fortti koodi saadaan ajettua
 
 app.use(middleware.logger)
+app.use(middleware.tokenExtractor)
+
+console.log('loginRouter')
 
 app.use('/api/login', loginRouter)
+console.log('blogRouter')
 app.use('/api/blogs', blogsRouter)
+console.log('userRouter')
 app.use('/api/users', usersRouter)
 
 app.use(middleware.error)

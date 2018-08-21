@@ -33,10 +33,27 @@ blogsRouter.get('/:id', async (request, response) => {
 
 blogsRouter.delete('/:id', async (request, response) => {
 
+  const decodedToken = jwt.verify(request.token, process.env.SECRET)
+  console.log('decodedToken: ' + decodedToken)
+  if (!request.token || !decodedToken.id) {
+    return response.status(401).json({ error: 'token missing or invalid' })
+  }
+
   console.log('reques: ' + request.params.id)
-  const blog = await Blog.findByIdAndRemove(request.params.id,{})
+
+  const blog = await Blog.findById(request.params.id,{})
   console.log('blogById: ' + blog)
-  response.json(Blog.formqt(blog))
+  console.log('blog.users: ' +blog.users)
+  console.log('decodedToken.id :' +decodedToken.id )
+
+  if ( blog.users.toString() === decodedToken.id.toString() ){
+    console.log('poisto' )
+    const blog = await Blog.findByIdAndRemove(request.params.id,{})
+    response.json(Blog.format(blog))
+  }else{
+    console.log('ei poisteta')
+    return response.status(300).json({ error: 'invalid user' })
+  }
 
 })
 
@@ -57,10 +74,10 @@ blogsRouter.post('/', async (request, response) => {
   try {
 
     const body = request.body
-    const token = getTokenFrom(request)
-    const decodedToken = jwt.verify(token, process.env.SECRET)
-
-    if (!token || !decodedToken.id) {
+    //const token = getTokenFrom(request)
+    const decodedToken = jwt.verify(request.token, process.env.SECRET)
+    console.log('decodedToken: ' + decodedToken)
+    if (!request.token || !decodedToken.id) {
       return response.status(401).json({ error: 'token missing or invalid' })
     }
 
@@ -71,9 +88,9 @@ blogsRouter.post('/', async (request, response) => {
       return response.status(400).json({ error: 'content missing' })
     }
 
-    //const user = await User.findById(body.userId)
-    const allUser = await User.find({})
-    const user = allUser[1]
+    const user = await User.findById(decodedToken.id)
+    //const allUser = await User.find({})
+    //const user = allUser[1]
 
     console.log('user: ' + user)
     console.log('userID: ' + user.id)
@@ -97,7 +114,12 @@ blogsRouter.post('/', async (request, response) => {
 
     response.status(201).json(Blog.format(savedBlog))
   } catch (exception) {
-    response.status(500).json({ error: 'something went wrong...' })
+    if (exception.name === 'JsonWebTokenError' ) {
+      response.status(401).json({ error: exception.message })
+    } else {
+      console.log(exception)
+      response.status(500).json({ error: 'something went wrong...' })
+    }
   }
 })
 
