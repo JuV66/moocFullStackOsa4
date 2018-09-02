@@ -17,8 +17,17 @@ blogsRouter.get('/', async (request, response) => {
     .find({})
     .populate('users', { username: 1, name: 1 })
 
-  console.log('Blogs: ' + blogs)
-  response.json(blogs.map(Blog.format))
+  //console.log('Blogs: ' , blogs)
+  //console.log('Blogs_likes: ' , blogs.likes)
+  
+  const sortedBlogs = blogs.sort(function(a,b) {
+    if(a.likes > b.likes)  return 1
+    if(a.likes > b.likes) return -1
+    return 0
+  })
+
+  //console.log('sortedBlogs:', sortedBlogs)
+  response.json(sortedBlogs.map(Blog.format))
 
 })
 
@@ -92,7 +101,7 @@ blogsRouter.post('/', async (request, response) => {
     //const allUser = await User.find({})
     //const user = allUser[1]
 
-    console.log('user: ' + user)
+    console.log('user##: ' + user)
     console.log('userID: ' + user.id)
     console.log('\n')
     console.log('\n')
