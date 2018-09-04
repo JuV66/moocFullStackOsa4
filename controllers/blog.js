@@ -17,7 +17,7 @@ blogsRouter.get('/', async (request, response) => {
     .find({})
     .populate('users', { username: 1, name: 1 })
 
-  //console.log('Blogs: ' , blogs)
+  console.log('Blogs: ' , blogs)
   //console.log('Blogs_likes: ' , blogs.likes)
   
   const sortedBlogs = blogs.sort(function(a,b) {
@@ -43,7 +43,7 @@ blogsRouter.get('/:id', async (request, response) => {
 blogsRouter.delete('/:id', async (request, response) => {
 
   const decodedToken = jwt.verify(request.token, process.env.SECRET)
-  console.log('decodedToken: ' + decodedToken)
+  console.log('decodedToken: ',decodedToken)
   if (!request.token || !decodedToken.id) {
     return response.status(401).json({ error: 'token missing or invalid' })
   }
@@ -51,17 +51,29 @@ blogsRouter.delete('/:id', async (request, response) => {
   console.log('reques: ' + request.params.id)
 
   const blog = await Blog.findById(request.params.id,{})
-  console.log('blogById: ' + blog)
-  console.log('blog.users: ' +blog.users)
-  console.log('decodedToken.id :' +decodedToken.id )
-
+  console.log('blog%: ', blog)
+  console.log('blog.users%: ' ,blog.users)
+  console.log('blog.users#: ',blog.users.toString())
+  console.log('decodedToken.id#: ',decodedToken.id.toString())
+ 
   if ( blog.users.toString() === decodedToken.id.toString() ){
-    console.log('poisto' )
+    console.log('läpi')
+    //console.log('blog.users#: ',blog.users)
+    //console.log('decodedToken.id#: ',decodedToken.id)
+    //console.log('request.params.id#: ',request.params.id)
+    
     const blog = await Blog.findByIdAndRemove(request.params.id,{})
+    //console.log('blog: ', blog)
+    console.log('poisto' )
     response.json(Blog.format(blog))
-  }else{
+  }else{/*
+    if (blog.users.toString() === ''){
+      const blog = await Blog.findByIdAndRemove(request.params.id,{})
+      response.json(Blog.format(blog))
+    } else{ */
     console.log('ei poisteta')
     return response.status(300).json({ error: 'invalid user' })
+    //}
   }
 
 })
